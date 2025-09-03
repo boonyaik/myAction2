@@ -1,38 +1,24 @@
 import requests
-import csv
-import os
 
-# API endpoint
-url = "http://api.open-notify.org/iss-now.json"
+try:
+    # Request ISS position
+    url = "http://api.open-notify.org/iss-now.json"
+    response = requests.get(url)
+    data = response.json()
 
-# CSV file path
-csv_file = "iss_location.csv"
+    # Extract fields
+    timestamp = data['timestamp']
+    longitude = data['iss_position']['longitude']
+    latitude = data['iss_position']['latitude']
 
-# Check if file exists to decide if header is needed
-file_exists = os.path.isfile(csv_file)
+    url = f"https://script.google.com/macros/s/AKfycbxinoyKQzRelTlVp3U7hhJx2vrQoCwuOi1T9WAmjNVCGaiJQBDwtBmvyjBR52Qa-LeZ6g/exec?Longitude={longitude}&Latitude={latitude}"
 
-# Open CSV file once in append mode
-with open(csv_file, mode="a", newline="") as file:
-    writer = csv.writer(file)
-    if not file_exists:
-        writer.writerow(["timestamp", "longitude", "latitude"])  # header
-    
-    try:
-        # Request ISS position
-        response = requests.get(url)
-        data = response.json()
+    response = requests.get(url, timeout=10)
+    print("Status:", response.status_code)
+    print("Response:", response.text)
+    print(f"Saved: {timestamp}, {longitude}, {latitude}")
 
-        # Extract fields
-        timestamp = data['timestamp']
-        longitude = data['iss_position']['longitude']
-        latitude = data['iss_position']['latitude']
-
-        # Write to CSV
-        writer.writerow([timestamp, longitude, latitude])
-        file.flush()  # ensure data is written immediately
-
-        print(f"Saved: {timestamp}, {longitude}, {latitude}")
-
-    except Exception as e:
-        print(f"Error: {e}")
+    response.close()
+except Exception as e:
+    print(f"Error: {e}")
 
